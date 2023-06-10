@@ -1,0 +1,7 @@
+{
+  "name": "tes-ionic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
