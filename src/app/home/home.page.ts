@@ -4,10 +4,9 @@ import { Capacitor } from '@capacitor/core';
 import { Plugins } from '@capacitor/core';
 
 import { Geolocation } from '@capacitor/geolocation';
-
+import { AlertController, ToastController } from '@ionic/angular';
 
 declare var nfc: any;
-
 
 @Component({
   selector: 'app-home',
@@ -16,18 +15,31 @@ declare var nfc: any;
 })
 export class HomePage {
   nfcNumber: string = '';
+  //location
+  latitude: number = 0;
+  longitude: number = 0;
 
-  constructor() {}
+  constructor(private toastController: ToastController) {}
 
-  ionViewDidEnter() {
-    this.getNfcNumber()
-      .then((nfcNumber) => {
-        this.nfcNumber = nfcNumber;
-      })
-      .catch((error) => {
-        console.error('Error getting NFC number:', error);
+  async ionViewDidEnter() {
+    try {
+      await this.getCurrentLocation();
+      const nfcNumber = await this.getNfcNumber();
+      this.nfcNumber = nfcNumber;
+      const toast = await this.toastController.create({
+        message: nfcNumber,
+        duration: 2000,
       });
+      toast.present();
+    } catch (error:any) {
+      const toast = await this.toastController.create({
+        message: error.toString(),
+        duration: 2000,
+      });
+      toast.present();
+    }
   }
+  
 
   onNfcEvent(event: any) {
     console.log('NFC Event:', event);
@@ -74,26 +86,26 @@ export class HomePage {
 
   sendEmail() {
     const { Device } = Plugins;
-  
+
     (Device as any)['getInfo']().then((info: any) => {
       if (info.platform === 'web') {
         // Handle web platform
-        window.location.href = 'mailto:recipient@example.com?subject=Email Subject&body=Hello, this is the email body.';
+        window.location.href =
+          'mailto:recipient@example.com?subject=Email Subject&body=Hello, this is the email body.';
       } else {
         // Handle other platforms
-        const emailUrl = 'mailto:recipient@example.com?subject=Email Subject&body=Hello, this is the email body.';
+        const emailUrl =
+          'mailto:recipient@example.com?subject=Email Subject&body=Hello, this is the email body.';
         window.open(emailUrl, '_system');
       }
     });
   }
 
-
-  //LOCATION 
-  async trackLocation() {
-    const coor = await Geolocation.getCurrentPosition();
+  async getCurrentLocation() {
+    try {
+      const position = await Geolocation.getCurrentPosition();
+      this.latitude = position.coords.latitude;
+      this.longitude = position.coords.longitude;
+    } catch (error) {}
   }
-
-
-
-
 }
